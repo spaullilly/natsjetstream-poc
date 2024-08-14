@@ -1,0 +1,27 @@
+version: '3.9'
+services:
+  nats-server-js:
+    image: docker.io/nats:2.10.18
+    ports:
+      - "4222:4222"
+      - "8222:8222"      
+    volumes:
+      - nats-server-js:/data
+    command:
+      #- "--name=nats1"
+      #- "--cluster_name=c1"
+      #- "--cluster=nats://nats1:6222"
+      #- "--routes=nats-route://nats1:6222,nats-route://nats2:6222,nats-route://nats3:6222"
+      - "--http_port=8222"
+      - "--js"
+      - "--sd=/data"
+
+  telegraf:
+    image: telegraf:1.29.5
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    depends_on:
+      - nats-server-js
+
+volumes:
+  nats-server-js:
