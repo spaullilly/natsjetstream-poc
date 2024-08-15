@@ -114,6 +114,50 @@ subject: poc1, message: test message 80
 total received: 45
 ```
 
+## Retention
+- RetentionPolicy: https://docs.nats.io/nats-concepts/jetstream/streams#retentionpolicy
+- DiscardPolicy: https://docs.nats.io/nats-concepts/jetstream/streams#discardpolicy
+
+In the stream config, I set MaxAge to 1min. The old messages are deleted after that time. This is default behavior.
+
+```
+> go run main.go -stream=ptest -producer -subject=poc1 -msgcount=100 -msgage=60
+> ./nats -s localhost:4222 stream info ptest
+Information for Stream ptest created 2024-08-15 15:40:27
+
+              Subjects: poc1
+              Replicas: 1
+               Storage: File
+
+Options:
+
+             Retention: Limits
+       Acknowledgments: true
+        Discard Policy: Old
+      Duplicate Window: 2m0s
+     Allows Msg Delete: true
+          Allows Purge: true
+        Allows Rollups: false
+
+Limits:
+
+      Maximum Messages: unlimited
+   Maximum Per Subject: unlimited
+         Maximum Bytes: unlimited
+           Maximum Age: 1m0s
+  Maximum Message Size: unlimited
+     Maximum Consumers: unlimited
+
+State:
+
+              Messages: 110
+                 Bytes: 5.2 KiB
+        First Sequence: 1 @ 2024-08-15 15:44:24
+         Last Sequence: 110 @ 2024-08-15 15:47:57
+      Active Consumers: 1
+    Number of Subjects: 1
+```
+
 # NATs non-jetstream test
 
 ```

@@ -59,11 +59,13 @@ func main() {
 	producerPtr := flag.Bool("producer", false, "producer name")
 	producerSubjectPtr := flag.String("subject", "poc", "subject name")
 	producerMsgCountPtr := flag.Int("msgcount", 10, "number of messages to produce")
+	producerMsgAgePtr := flag.Int("msgage", 60, "message age in seconds")
 	flag.Parse()
 
 	o := NewOperator()
 	o.StreamConfig.Name = *streamPtr
 	o.StreamConfig.Subjects = []string{*producerSubjectPtr}
+	o.StreamConfig.MaxAge = time.Duration(*producerMsgAgePtr) * time.Second
 
 	// Create an unauthenticated connection to NATS.
 	nc, _ := nats.Connect(o.NatsURL)
