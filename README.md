@@ -24,16 +24,94 @@ curl -sf https://binaries.nats.dev/nats-io/natscli/nats@latest | sh
 
 # Go test
 
+- With producer
+  - Produce **10** messages on stream **ptest** subject **poc1**
+  
+Command:
 ```
-# Publish 10 messages
-./nats bench -s localhost:4222 benchstream --js --pub 1 --msgs=10
+go run main.go -stream=ptest -producer -subject=poc1 -msgcount=100
+```
 
-# Consume messages
-go run consumer.go
+Output:
+```
+creating 100 messages
+```
+  - Check stream
 
-# View consumer stats
-./nats con info benchstream processor
+Command:
+```
+./nats -s localhost:4222 stream list
+```
 
+Output:
+
+```
+╭─────────────────────────────────────────────────────────────────────────────────────╮
+│                                       Streams                                       │
+├─────────────┬─────────────┬─────────────────────┬──────────┬─────────┬──────────────┤
+│ Name        │ Description │ Created             │ Messages │ Size    │ Last Message │
+├─────────────┼─────────────┼─────────────────────┼──────────┼─────────┼──────────────┤
+│ ptest       │             │ 2024-08-15 15:40:27 │ 110      │ 5.2 KiB │ 4m45s        │
+│ benchstream │             │ 2024-08-14 15:03:11 │ 165      │ 22 KiB  │ 9m36s        │
+╰─────────────┴─────────────┴─────────────────────┴──────────┴─────────┴──────────────╯
+```
+
+  - Consume
+  
+Command:
+```
+ go run main.go -fetch=45 -stream=ptest -ack -acktype=double -consumer=processor
+```
+
+Ouput:
+
+```
+subject: poc1, message: test message 36
+subject: poc1, message: test message 37
+subject: poc1, message: test message 38
+subject: poc1, message: test message 39
+subject: poc1, message: test message 40
+subject: poc1, message: test message 41
+subject: poc1, message: test message 42
+subject: poc1, message: test message 43
+subject: poc1, message: test message 44
+subject: poc1, message: test message 45
+subject: poc1, message: test message 46
+subject: poc1, message: test message 47
+subject: poc1, message: test message 48
+subject: poc1, message: test message 49
+subject: poc1, message: test message 50
+subject: poc1, message: test message 51
+subject: poc1, message: test message 52
+subject: poc1, message: test message 53
+subject: poc1, message: test message 54
+subject: poc1, message: test message 55
+subject: poc1, message: test message 56
+subject: poc1, message: test message 57
+subject: poc1, message: test message 58
+subject: poc1, message: test message 59
+subject: poc1, message: test message 60
+subject: poc1, message: test message 61
+subject: poc1, message: test message 62
+subject: poc1, message: test message 63
+subject: poc1, message: test message 64
+subject: poc1, message: test message 65
+subject: poc1, message: test message 66
+subject: poc1, message: test message 67
+subject: poc1, message: test message 68
+subject: poc1, message: test message 69
+subject: poc1, message: test message 70
+subject: poc1, message: test message 71
+subject: poc1, message: test message 72
+subject: poc1, message: test message 73
+subject: poc1, message: test message 74
+subject: poc1, message: test message 75
+subject: poc1, message: test message 76
+subject: poc1, message: test message 77
+subject: poc1, message: test message 78
+subject: poc1, message: test message 79
+subject: poc1, message: test message 80
+total received: 45
 ```
 
 # NATs non-jetstream test
@@ -44,3 +122,29 @@ nats bench foo --pub 1 --sub 1 --size 16
 
 # Benchmark
 https://docs.nats.io/using-nats/nats-tools/nats_cli/natsbench
+
+- Sending 100000 messages
+```
+./nats bench -s localhost:4222 benchstreamtest --js --pub 1 --msgs=100000
+15:54:59 Starting JetStream benchmark [subject=benchstreamtest, multisubject=false, multisubjectmax=100000, js=true, msgs=100,000, msgsize=128 B, pubs=1, subs=0, stream=benchstream, maxbytes=1.0 GiB, storage=file, syncpub=false, pubbatch=100, jstimeout=30s, pull=false, consumerbatch=100, push=false, consumername=natscli-bench, replicas=1, purge=false, pubsleep=0s, subsleep=0s, dedup=false, dedupwindow=2m0s]
+15:54:59 Starting publisher, publishing 100,000 messages
+Finished      1s [==========================================================================================================================================================================================================] 100%
+
+Pub stats: 53,347 msgs/sec ~ 6.51 MB/sec
+```
+
+
+# Interesting errors
+- When trying to use an existing subject from one stream on a new stream:
+
+```
+error creating or updating stream nats: API error: code=400 err_code=10065 description=subjects overlap with an existing stream
+error producing messages nats: API error: code=400 err_code=10065 description=subjects overlap with an existing stream
+```
+
+- When trying to publish:
+```
+./nats bench -s localhost:4222 benchstreamtest --js --pub 1 --msgs=100000
+15:54:00 Starting JetStream benchmark [subject=benchstreamtest, multisubject=false, multisubjectmax=100000, js=true, msgs=100,000, msgsize=128 B, pubs=1, subs=0, stream=benchstream, maxbytes=1.0 GiB, storage=file, syncpub=false, pubbatch=100, jstimeout=30s, pull=false, consumerbatch=100, push=false, consumername=natscli-bench, replicas=1, purge=false, pubsleep=0s, subsleep=0s, dedup=false, dedupwindow=2m0s]
+15:54:00 nats: stream name already in use. If you want to delete and re-define the stream use `nats stream delete benchstream`.
+```
