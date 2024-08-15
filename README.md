@@ -36,4 +36,11 @@ go run consumer.go
 
 ```
 
+# NATs non-jetstream test
 
+```
+nats bench foo --pub 1 --sub 1 --size 16
+```
+
+# Benchmark
+https://docs.nats.io/using-nats/nats-tools/nats_cli/natsbench
