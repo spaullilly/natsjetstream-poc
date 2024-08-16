@@ -181,12 +181,18 @@ Pub stats: 53,347 msgs/sec ~ 6.51 MB/sec
 # Interesting errors
 - When trying to use an existing subject from one stream on a new stream:
 
+  - A Stream can have multiple subjects
+  - A Consumer can filter on subjects or not
+  - A Stream can have multiple Consumers
+  - A Subject CAN NOT be in 2 Streams, unless each Stream is on a different Account
+
 ```
 error creating or updating stream nats: API error: code=400 err_code=10065 description=subjects overlap with an existing stream
 error producing messages nats: API error: code=400 err_code=10065 description=subjects overlap with an existing stream
 ```
 
 - When trying to publish:
+  - I think this is an issue because `nats bench` is trying to create the stream and it already existed. Unlike my code, that uses a function to CreateOrUpdate.
 ```
 ./nats bench -s localhost:4222 benchstreamtest --js --pub 1 --msgs=100000
 15:54:00 Starting JetStream benchmark [subject=benchstreamtest, multisubject=false, multisubjectmax=100000, js=true, msgs=100,000, msgsize=128 B, pubs=1, subs=0, stream=benchstream, maxbytes=1.0 GiB, storage=file, syncpub=false, pubbatch=100, jstimeout=30s, pull=false, consumerbatch=100, push=false, consumername=natscli-bench, replicas=1, purge=false, pubsleep=0s, subsleep=0s, dedup=false, dedupwindow=2m0s]
