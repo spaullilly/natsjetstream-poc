@@ -221,8 +221,8 @@ go run main.go -fetch=5 -stream=ptest -consumer=processor
 
 ## Montoring Data
 
-o11y.rdu1.logs.t0-gg1-a1-01-r001-rdu1
-o11y.rdu1.metrics.cw-cumulus-exporter.t0-gg1-a1-01-r001-rdu1
+- Logs: o11y.rdu1.logs.t0-gg1-a1-01-r001-rdu1
+- Metrics: o11y.rdu1.metrics.cw-cumulus-exporter.t0-gg1-a1-01-r001-rdu1
 
 ### Produce
 
