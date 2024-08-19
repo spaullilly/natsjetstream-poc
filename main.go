@@ -141,6 +141,7 @@ func (o *Operator) Consume() error {
 	msgs, _ := dur.FetchNoWait(o.ConsumerConfig.FetchCount)
 	for msg := range msgs.Messages() {
 		fmt.Printf("subject: %s, message: %s\n", msg.Subject(), string(msg.Data()))
+		//fmt.Println(msg.Metadata())
 		received++
 		if o.ConsumerConfig.Ack {
 			if o.ConsumerConfig.AckType == "single" {

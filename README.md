@@ -121,7 +121,7 @@ total received: 45
 In the stream config, I set MaxAge to 1min. The old messages are deleted after that time. This is default behavior.
 
 ```
-> go run main.go -stream=ptest -producer -subject=poc1 -msgcount=100 -msgage=60
+> go run main.go -stream=ptest -producer -subject=poc1 -msgcount=100 -msgage=600
 > ./nats -s localhost:4222 stream info ptest
 Information for Stream ptest created 2024-08-15 15:40:27
 
