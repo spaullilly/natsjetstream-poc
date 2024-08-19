@@ -177,6 +177,10 @@ Finished      1s [==============================================================
 Pub stats: 53,347 msgs/sec ~ 6.51 MB/sec
 ```
 
+# Good Docs
+- https://docs.nats.io/nats-concepts/jetstream/streams
+- https://github.com/ConnectEverything/nats-by-example/tree/main/examples/jetstream/pull-consumer/go
+
 
 # Interesting errors
 - When trying to use an existing subject from one stream on a new stream:
@@ -198,3 +202,71 @@ error producing messages nats: API error: code=400 err_code=10065 description=su
 15:54:00 Starting JetStream benchmark [subject=benchstreamtest, multisubject=false, multisubjectmax=100000, js=true, msgs=100,000, msgsize=128 B, pubs=1, subs=0, stream=benchstream, maxbytes=1.0 GiB, storage=file, syncpub=false, pubbatch=100, jstimeout=30s, pull=false, consumerbatch=100, push=false, consumername=natscli-bench, replicas=1, purge=false, pubsleep=0s, subsleep=0s, dedup=false, dedupwindow=2m0s]
 15:54:00 nats: stream name already in use. If you want to delete and re-define the stream use `nats stream delete benchstream`.
 ```
+
+# Various Commands
+```
+go run main.go -fetch=10 -ack -acktype=double -stream=benchstream -consumer=processor2
+
+go run main.go -fetch=10 -stream=benchstream -consumer=processor2
+
+
+# Produce and consume via code
+go run main.go -stream=ptest -producer -subject=poc1 -msgcount=10
+go run main.go -fetch=5 -stream=ptest -consumer=processor
+
+```
+
+
+# Subjects
+
+## Montoring Data
+
+o11y.rdu1.logs.t0-gg1-a1-01-r001-rdu1
+o11y.rdu1.metrics.cw-cumulus-exporter.t0-gg1-a1-01-r001-rdu1
+
+### Produce
+
+- Subject: `o11y.rdu1.logs.t0-gg1-a1-01-r001-rdu1`
+```
+go run main.go -stream=subtest -producer -subject=o11y.rdu1.logs.t0-gg1-a1-01-r001-rdu1 -msgcount=100 -msgage=600
+```
+
+- Subject: `o11y.rdu1.metrics.cw-cumulus-exporter.t0-gg1-a1-01-r001-rdu1`
+```
+go run main.go -stream=subtest -producer -subject=o11y.rdu1.metrics.cw-cumulus-exporter.t0-gg1-a1-01-r001-rdu1 -msgcount=100 -msgage=600
+```
+
+### Consume
+- Consume from first
+```
+go run main.go -fetch=5 -stream=subtest -ack -acktype=double -consumer=sub1 -subjects=o11y.rdu1.logs.t0-gg1-a1-01-r001-rdu1
+```
+
+- Consume from second
+```
+go run main.go -fetch=5 -stream=subtest -ack -acktype=double -consumer=sub1 -subjects=o11y.rdu1.metrics.cw-cumulus-exporter.t0-gg1-a1-01-r001-rdu1
+```
+
+- Consume from both
+```
+go run main.go -fetch=200 -stream=subtest -ack -acktype=double -consumer=sub1 -subjects=o11y.rdu1.logs.t0-gg1-a1-01-r001-rdu1,o11y.rdu1.metrics.cw-cumulus-exporter.t0-gg1-a1-01-r001-rdu1
+```
+
+- New consumer from both
+```
+go run main.go -fetch=200 -stream=subtest -ack -acktype=double -consumer=sub2 -subjects=o11y.rdu1.logs.t0-gg1-a1-01-r001-rdu1,o11y.rdu1.metrics.cw-cumulus-exporter.t0-gg1-a1-01-r001-rdu1
+```
+
+- New consumer from both with wildcard
+```
+go run main.go -fetch=200 -stream=subtest -ack -acktype=double -consumer=sub3 -subjects='o11y.rdu1.>'
+```
+
+### Observation
+1. After producing to both, logs first then metrics:
+  - Using the same consumer, it seems work sequentially. If I consume from the metrics first, then the first logs may or may not be consumable.
+  - If I consume from both subjects it works
+1. Consuming from both with a new consumer works as expected.
+
+#### Conclusion
+THe test proves that with our long term running services we are able to utilize subject-based messaging well. Both listing out the subjects and using the wildcard worked perfectly.

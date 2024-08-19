@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/nats-io/nats.go"
@@ -56,6 +57,7 @@ func main() {
 	ackType := flag.String("acktype", "single", "acknowledge type (single, double)")
 	streamPtr := flag.String("stream", "benchstream", "stream name")
 	consumerPtr := flag.String("consumer", "", "consumer name")
+	consumerSubjects := flag.String("subjects", "poc", "consumer subjects (comma separated)")
 	producerPtr := flag.Bool("producer", false, "producer name")
 	producerSubjectPtr := flag.String("subject", "poc", "subject name")
 	producerMsgCountPtr := flag.Int("msgcount", 10, "number of messages to produce")
@@ -64,7 +66,7 @@ func main() {
 
 	o := NewOperator()
 	o.StreamConfig.Name = *streamPtr
-	o.StreamConfig.Subjects = []string{*producerSubjectPtr}
+	//o.StreamConfig.Subjects = []string{*producerSubjectPtr}
 	o.StreamConfig.MaxAge = time.Duration(*producerMsgAgePtr) * time.Second
 
 	// Create an unauthenticated connection to NATS.
@@ -88,6 +90,7 @@ func main() {
 		fmt.Println("consumer and producer cannot be set at the same time")
 		os.Exit(1)
 	} else if *consumerPtr != "" {
+		o.StreamConfig.Subjects = strings.Split(*consumerSubjects, ",")
 		o.ConsumerConfig = ConsumerConfig{
 			Name:       *consumerPtr,
 			FetchCount: *fetchCntPtr,
@@ -99,6 +102,7 @@ func main() {
 			fmt.Println("error consuming messages", err)
 		}
 	} else if *producerPtr {
+		o.StreamConfig.Subjects = []string{*producerSubjectPtr}
 		o.ProducerConfig = ProducerConfig{
 			MsgNum:  *producerMsgCountPtr,
 			Subject: *producerSubjectPtr,
@@ -126,7 +130,8 @@ func (o *Operator) Consume() error {
 	}
 
 	dur, _ := stream.CreateOrUpdateConsumer(o.Ctx, jetstream.ConsumerConfig{
-		Durable: o.ConsumerConfig.Name,
+		Durable:        o.ConsumerConfig.Name,
+		FilterSubjects: o.StreamConfig.Subjects,
 		//AckPolicy: jetstream.AckAllPolicy,
 	})
 
@@ -163,7 +168,7 @@ func (o *Operator) Produce() error {
 	}
 	fmt.Printf("creating %d messages\n", o.ProducerConfig.MsgNum)
 	for i := 1; i <= o.ProducerConfig.MsgNum; i++ {
-		_, err = o.JetStream.Publish(o.Ctx, o.ProducerConfig.Subject, []byte(fmt.Sprintf("test message %d", i)))
+		_, err = o.JetStream.Publish(o.Ctx, o.ProducerConfig.Subject, []byte(fmt.Sprintf("test message %d - %s", i, o.ProducerConfig.Subject)))
 		if err != nil {
 			fmt.Println("error publishing message", err)
 			return err
