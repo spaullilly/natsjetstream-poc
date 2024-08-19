@@ -270,3 +270,30 @@ go run main.go -fetch=200 -stream=subtest -ack -acktype=double -consumer=sub3 -s
 
 #### Conclusion
 THe test proves that with our long term running services we are able to utilize subject-based messaging well. Both listing out the subjects and using the wildcard worked perfectly.
+
+
+# Queue Groups
+
+Install telegraf for this: https://docs.influxdata.com/telegraf/v1/install/
+
+
+Test: 
+- Spin up 3 telegraf instances all in the same queue group
+
+- Produce messages
+
+```
+go run main.go -stream=queuetest -producer -subject=queue.o11y.rdu1.logs.t0-gg1-a1-01-r001-rdu1 -msgcount=100 -msgage=1200
+```
+
+- Observe how many each received
+  - All three received unique messages
+- Turn one off and produce messages:
+  - Both remaining got messages (new only)
+- Turn back on the 3rd, produce and observe:
+  - All three received unique messages (new only)
+- Turn them all off, produce message with new string, wait 5 min, produce message with new string, turn them on:
+  - For this I didn't need to wait. I turned them all off, produced 30, turned one on and it replayed the previous as well
+
+#### Conclusion
+If we didn't care about disaster recovery, we could use telegraf. Issue is, telegraf deletes its consumer when it stops. We could open a ticket to get durable consumers added but the purpose of telegraf is to be ephemeral. If we had a resilient setup (multiple hosts) we could scale up telegraf and use as is. 1 consumer would be online at all times in that queue group.

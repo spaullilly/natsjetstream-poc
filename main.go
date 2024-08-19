@@ -168,7 +168,7 @@ func (o *Operator) Produce() error {
 	}
 	fmt.Printf("creating %d messages\n", o.ProducerConfig.MsgNum)
 	for i := 1; i <= o.ProducerConfig.MsgNum; i++ {
-		_, err = o.JetStream.Publish(o.Ctx, o.ProducerConfig.Subject, []byte(fmt.Sprintf("test message %d - %s", i, o.ProducerConfig.Subject)))
+		_, err = o.JetStream.Publish(o.Ctx, o.ProducerConfig.Subject, []byte(fmt.Sprintf("queue 1 test message %d - %s", i, o.ProducerConfig.Subject)))
 		if err != nil {
 			fmt.Println("error publishing message", err)
 			return err
